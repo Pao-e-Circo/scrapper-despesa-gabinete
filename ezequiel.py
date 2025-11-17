@@ -31,6 +31,15 @@ class OfficeSpending(Base):
 
     councilour: Mapped[["Councilour"]] = relationship(back_populates="councilour")
 
+
+def parse_raw_string_to_office_spending_schema(string: str):
+    
+
+def save_office_spendings_for_each_councilour(client: sqlalchemy.Engine, strings: list[str]):
+    for i in strings:
+
+
+
 txt_file = os.getenv("paoecirco.org_link.txt_path")
 
 links = []
@@ -42,6 +51,8 @@ with open(txt_file, "r") as f:
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 wait = WebDriverWait(driver, 10)
 
+strings = []
+
 for link in links: # TODO add try/catch with logs
     driver.get(link)
 
@@ -51,7 +62,15 @@ for link in links: # TODO add try/catch with logs
     driver.switch_to.frame(iframe)
 
     parent = driver.find_element(By.XPATH, "/html/body/div/div/div[1]/table/tbody") 
-    print(parent.text)
-
+    strings.append(parent.text)
 
 driver.quit()
+
+client = sqlalchemy.create_engine(
+    "postgresql+psycopg2://postgres:postgres@localhost:5432/paoecirco.org",
+    echo=True
+)
+
+Base.metadata.create_all(client)
+
+save_office_spendings_for_each_councilour(client, strings)
