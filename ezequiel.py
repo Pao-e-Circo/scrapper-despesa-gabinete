@@ -14,12 +14,7 @@ import difflib
 import uuid
 from datetime import date
 
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    relationship,
-)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from sqlalchemy.dialects.postgresql import UUID
 
