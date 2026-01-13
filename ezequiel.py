@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 import os
 import sqlalchemy
 from sqlalchemy.orm import Session
@@ -66,7 +67,7 @@ def get_councilour_by_name_and_set_id(name: str, councilours: list[Councilour]):
 
 def parse_raw_string_to_office_spending_schema(text: str) -> list[OfficeSpending]:
     lines = text.split('\n')
-    
+
     year_match = re.search(r'RELATÓRIO DE DESPESA ANUAL - (\d{4})', text)
     year = int(year_match.group(1)) if year_match else datetime.now().year
 
@@ -74,7 +75,7 @@ def parse_raw_string_to_office_spending_schema(text: str) -> list[OfficeSpending
     councilor_name = councilor_name_match.group(1).strip() if councilor_name_match else "N/A"
 
     data_lines = lines[5:]
-    
+
     spendings_by_month = {}
 
     for line in data_lines:
@@ -84,14 +85,14 @@ def parse_raw_string_to_office_spending_schema(text: str) -> list[OfficeSpending
         parts = re.split(r'\s+R\$\s+', line)
         item_name = parts[0].strip()
         values_str = [v for v in parts[1:] if re.match(r'[\d.,]+', v)]
-        
+
         # Remove os dois últimos valores (Média e Total)
         monthly_values_str = values_str[:-2]
 
         for i, value_str in enumerate(monthly_values_str):
             month = i + 1
             value = Decimal(value_str.replace('.', '').replace(',', '.'))
-            
+
             if month not in spendings_by_month:
                 spendings_by_month[month] = OfficeSpending(
                     month=datetime(year, month, 1).date(),
@@ -115,7 +116,7 @@ def save_office_spendings_for_each_councilour(client: sqlalchemy.Engine, strings
 
     for i in strings:
         office_spendings.extend(parse_raw_string_to_office_spending_schema(i))
-    
+
     for spending in office_spendings:
         councilour = get_councilour_by_name_and_set_id(spending.councilor_name_temp, councilours)
         if councilour:
@@ -150,11 +151,14 @@ with open(txt_file, "r") as f:
         links.append(line.strip())
 
 options = Options()
+options.binary_location = "/usr/bin/chromium"
 options.add_argument("--headless=new")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage") # TODO ver isso, desabilita browser sandbox, essa flag não pode ser usado em PRD
 
-driver = webdriver.Chrome(options=options)
+service = Service("/usr/bin/chromedriver")
+
+driver = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(driver, 10)
 
 strings = []
@@ -168,7 +172,7 @@ for link in links:
     iframe = driver.find_element(By.ID, "pageswitcher-content")
     driver.switch_to.frame(iframe)
 
-    parent = driver.find_element(By.XPATH, "/html/body/div/div/div[1]/table/tbody") 
+    parent = driver.find_element(By.XPATH, "/html/body/div/div/div[1]/table/tbody")
     strings.append(parent.text)
     print(parent.text)
 
