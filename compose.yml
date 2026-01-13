@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - /apps/links:/apps/links:ro
+      - /apps/links/despesas.txt:/apps/links/despesas.txt:ro
     networks:
       - server_default
 

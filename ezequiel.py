@@ -140,7 +140,7 @@ def get_all_councilours(client: sqlalchemy.Engine):
         stmt = sqlalchemy.select(Councilour)
         return session.scalars(stmt).all()
 
-txt_file = os.getenv("paoecirco.org_link.txt_path")
+txt_file = os.getenv("despesas_txt_path")
 if txt_file is None:
     print("A variável de ambiente 'paoecirco.org_link.txt_path' não está definida.")
 

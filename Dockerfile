@@ -9,6 +9,6 @@ RUN pip install -r requirements.txt
 
 COPY . /code
 
-ENV paoecirco.org_link.txt_path=/apps/links
+ENV despesas_txt_path=/apps/links/despesas.txt
 
 CMD ["tail", "-f", "/dev/null"]
