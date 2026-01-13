@@ -179,8 +179,8 @@ driver.quit()
 print('Scrapping finalizado, iniciando inserção na base de dados.')
 
 client = sqlalchemy.create_engine(
-    "postgresql+psycopg2://postgres:postgres@localhost:5432/paoecirco.org",
-    echo=True
+    "postgresql+psycopg2://postgres:postgres@server-database-1:5432/paoecirco.org",
+    echo=False
 )
 
 Base.metadata.create_all(client)

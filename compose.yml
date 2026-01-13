@@ -1,0 +1,14 @@
+services:
+  scrapper-despesa-gabinete:
+    container_name: scrapper-despesa-gabinete
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /apps/links:/app/links:ro
+    networks:
+      - server_default
+
+networks:
+  server_default:
+    external: true

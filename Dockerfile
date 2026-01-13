@@ -9,6 +9,6 @@ RUN pip install -r requirements.txt
 
 COPY . /code
 
-ENV paoecirco.org_link.txt_path=/data/links
+ENV paoecirco.org_link.txt_path=/apps/links
 
-CMD ["bash"]
+CMD ["tail", "-f", "/dev/null"]
