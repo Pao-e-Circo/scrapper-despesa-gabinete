@@ -124,7 +124,6 @@ def save_office_spendings_for_each_councilour(client: sqlalchemy.Engine, strings
         else:
             print(f"Vereador '{spending.councilor_name_temp}' não encontrado. O registro de despesa será ignorado.")
 
-    # Filtra apenas os registros que tiveram um vereador correspondente encontrado
     potential_spendings = [s for s in office_spendings if hasattr(s, 'councilor_id')]
 
     councilor_ids = list({s.councilor_id for s in potential_spendings})
@@ -134,13 +133,15 @@ def save_office_spendings_for_each_councilour(client: sqlalchemy.Engine, strings
     spendings_to_save = []
     for spending in potential_spendings:
         if (spending.councilor_id, spending.month) not in existing_keys:
-            spendings_to_save.append(spending)
+            councilour = next((c for c in councilours if c.id == spending.councilor_id), None)
+            if councilour:
+                print(f"Registro a ser inserido: {councilour.name}, {spending.month.strftime('%m/%Y')}")
+                spendings_to_save.append(spending)
 
     if not spendings_to_save:
         print('Nenhum novo registro de despesa para salvar.')
         return
 
-    print(f'Iniciando inserção de {len(spendings_to_save)} registros de despesas para o mês de {spendings_to_save[0].month}')
     print('Pressiona qualquer tecla para prosseguir.')
     input()
 
