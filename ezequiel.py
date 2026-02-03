@@ -56,6 +56,9 @@ class OfficeSpending(Base):
     airline_tickets: Mapped[Decimal] = mapped_column(sqlalchemy.Numeric(10, 2), nullable=False, default=Decimal(0))
     hotel_rate: Mapped[Decimal] = mapped_column(sqlalchemy.Numeric(10, 2), nullable=False, default=Decimal(0))
     gasoline: Mapped[Decimal] = mapped_column(sqlalchemy.Numeric(10, 2), nullable=False, default=Decimal(0))
+    mail: Mapped[Decimal] = mapped_column(sqlalchemy.Numeric(10, 2), nullable=False, default=Decimal(0))
+    keys: Mapped[Decimal] = mapped_column(sqlalchemy.Numeric(10, 2), nullable=False, default=Decimal(0))
+    courses: Mapped[Decimal] = mapped_column(sqlalchemy.Numeric(10, 2), nullable=False, default=Decimal(0))
 
 
 def get_councilour_by_name_and_set_id(name: str, councilours: list[Councilour]):
@@ -66,6 +69,8 @@ def get_councilour_by_name_and_set_id(name: str, councilours: list[Councilour]):
     return None
 
 def parse_raw_string_to_office_spending_schema(text: str) -> list[OfficeSpending]:
+    text = re.sub(r'\n(?=R\$)', ' ', text) # às vezes as strings vêm com um \n a mais, por algum motivo
+
     lines = text.split('\n')
 
     year_match = re.search(r'RELATÓRIO DE DESPESA ANUAL - (\d{4})', text)
@@ -101,11 +106,17 @@ def parse_raw_string_to_office_spending_schema(text: str) -> list[OfficeSpending
                 # Atribui o nome extraído para uso posterior
                 spendings_by_month[month].councilor_name_temp = councilor_name
 
+            if (councilor_name == 'Jean Volpato'):
+                x = 1
+
             if 'Materiais de Expediente' in item_name: spendings_by_month[month].materials = value
             elif 'Telefonia Móvel' in item_name: spendings_by_month[month].mobile_phone = value
             elif 'Telefonia Fixa' in item_name: spendings_by_month[month].fixed_phone = value
             elif 'Fotocópias' in item_name: spendings_by_month[month].paper = value
+            elif 'Correspondências' in item_name: spendings_by_month[month].mail = value
+            elif 'Chaves / Carimbos' in item_name: spendings_by_month[month].keys = value
             elif 'Passagens' in item_name: spendings_by_month[month].airline_tickets = value
+            elif 'Inscrições em Cursos e Similares' in item_name: spendings_by_month[month].courses = value
             elif 'Diárias' in item_name: spendings_by_month[month].hotel_rate = value
             elif 'Combustíveis' in item_name: spendings_by_month[month].gasoline = value
 
@@ -161,7 +172,8 @@ def get_office_spendings_for_councilors(client: sqlalchemy.Engine, councilor_ids
         stmt = sqlalchemy.select(OfficeSpending).where(OfficeSpending.councilor_id.in_(councilor_ids))
         return session.scalars(stmt).all()
 
-txt_file = os.getenv("despesas_txt_path")
+# txt_file = os.getenv("despesas_txt_path")
+txt_file = "C:\\Users\\gusta\\Documents\\despesas-de-gabinete-e-presencas-de-sessoes\\blumenau\\gastos\\2025\\spreadsheets_links.txt"
 if txt_file is None:
     print("A variável de ambiente 'paoecirco.org_link.txt_path' não está definida.")
 
@@ -172,12 +184,13 @@ with open(txt_file, "r") as f:
         links.append(line.strip())
 
 options = Options()
-options.binary_location = "/usr/bin/chromium"
-options.add_argument("--headless=new")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage") # TODO ver isso, desabilita browser sandbox, essa flag não pode ser usado em PRD
+# options.binary_location = "/usr/bin/chromium"
+# options.add_argument("--headless=new")
+# options.add_argument("--no-sandbox")
+# options.add_argument("--disable-dev-shm-usage") # TODO ver isso, desabilita browser sandbox, essa flag não pode ser usado em PRD
 
-service = Service("/usr/bin/chromedriver")
+# service = Service("/usr/bin/chromedriver")
+service = Service()
 
 driver = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(driver, 10)
@@ -202,7 +215,8 @@ driver.quit()
 print('Scrapping finalizado, iniciando inserção na base de dados.')
 
 client = sqlalchemy.create_engine(
-    "postgresql+psycopg2://postgres:postgres@server-database-1:5432/paoecirco.org",
+    # "postgresql+psycopg2://postgres:postgres@server-database-1:5432/paoecirco.org",
+    "postgresql+psycopg2://postgres:postgres@localhost:5432/paoecirco.org",
     echo=False
 )
 
