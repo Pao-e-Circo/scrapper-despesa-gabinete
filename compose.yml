@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - /apps/links/despesas.txt:/apps/links/despesas.txt:ro
+      - /apps/despesas-de-gabinete-e-presencas-de-sessoes/blumenau/gastos/2025/spreadsheets_links.txt:/apps/links/despesas.txt:ro
     networks:
       - server_default
 
